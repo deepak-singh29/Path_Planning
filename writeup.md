@@ -1,10 +1,4 @@
 
-[//]: # (Image References)
-
-[image1]: ./output.jpg "Lane Change"
-[image2]: ./Imgs/fsm.jpg "FSM"
-[image3]: ./Imgs/lane.jpg "Lane Change"
-
 ## Path Planning Project
 
 
@@ -13,7 +7,7 @@
     Final output after driving through highway (4.6 Miles)
     
 
-![Output](image1)
+![Output](./Imgs/output.jpg)
 
 
 ### Rubric Points
@@ -39,16 +33,16 @@
    
 ### Model Documentation
 
-** **The simulator sends various parameters like *Car's location, velocity, yaw rate, speed, frenet coordinates and sensor fusion data*(for other cars in all the lanes).*Spline.h* library is being used for fitting polynomials as it is going to give smoother trajectory points.
+   The simulator sends various parameters like *Car's location, velocity, yaw rate, speed, frenet coordinates and sensor fusion data*(for other cars in all the lanes).*Spline.h* library is being used for fitting polynomials as it is going to give smoother trajectory points.
 
 #### Prediction
     
-** **As we recieved *Car's location, yaw rate, frenet coordinates, sensor fusion, velocity and speed* from the simulator.
-So by using these parameters we are predicting the future trajectory of nearby vehicle and based on their future we are going to take the decision for our own car. 
+   As we recieved *Car's location, yaw rate, frenet coordinates, sensor fusion, velocity and speed* from the simulator.
+So by using these parameters we are predicting the future position trajectory of nearby vehicle and based on their future we are going to take the decision for our own car. 
 
 #### Behaviour Planning
     
-** **Behaviour of our car is implemented in following steps:
+   Behaviour of our car is implemented in following steps:
     1. Check for vehicles(too close) in current lane.
     2. If ego cars finds vehicles too close(30m) in current lane.
     3. Planner checks for availablity of free lane such that any car's future position in destination lane is 15m behind and 30m ahead of ego car's predicted position after lane change.
@@ -57,14 +51,14 @@ So by using these parameters we are predicting the future trajectory of nearby v
     
 #### Trajectory Generation
     
-** **We have taken 50 trajectory points to define the trajectory.*car speed, the speed of surrounding cars, current lane, intended lane and previous points* is being used for trajectory point calculation.To make the trajectory smooth we have used last 2 points from previous point list. If the list is empty we have taken two points based on car's position and heading.
+We have taken 50 trajectory points to define the trajectory.*car speed, the speed of surrounding cars, current lane, intended lane and previous points* is being used for trajectory point calculation.To make the trajectory smooth we have used last 2 points from previous point list. If the list is empty we have taken two points based on car's position and heading.
 Post these 2 points calculation, 3 more way points (30m,60m and 90m apart) is added to the list.Then we have generated remaining points 0.02 sec apart.To make calculation easier we transformed the points to car's co ordinate system. Points is transformed to global co ordinate system before sending it to simulator.
 #### Finite State Machine (Lane Change)
     
-** **Since there are 3 lanes so we have 3 states.By assuming lane 1 as start state below is the diagram for finite state machine implemented in the project:
+Since there are 3 lanes so we have 3 states.By assuming lane 1 as start state below is the diagram for finite state machine implemented in the project:
 
-![FSM](image2)
+![FSM](./Imgs/fsm.jpg)
 
-** **Snap taken from video while changing the lane
+Snap taken from video while changing the lane
 
-![Lane](image3)
+![Lane](./Imgs/lane.jpg)
