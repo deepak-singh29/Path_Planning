@@ -298,14 +298,14 @@ int main() {
 					if(lane_no == 1){
 						// left and right lane change possible
 						if(d < (2+4*(lane_no - 1)+2) && d > (2+4*(lane_no - 1)-2)){
-							if((lane_car_s > car_s) && ((lane_car_s - car_s)>30)){
+							if(((lane_car_s > car_s) && ((lane_car_s - car_s)<30)) || ((lane_car_s < car_s) && (( car_s - lane_car_s)<15))){
 								//cost_lane0 = 1 - exp(-4/(lane_car_s - car_s));
 								cost_lane0 += 1;
 								//lane_no = 0;
 							}
 						}
 						if(d < (2+4*(lane_no + 1)+2) && d > (2+4*(lane_no + 1)-2)){
-							if((lane_car_s > car_s) && ((lane_car_s - car_s)>30)){
+							if(((lane_car_s > car_s) && ((lane_car_s - car_s)<30)) || ((lane_car_s < car_s) && (( car_s - lane_car_s)<15))){
 								//cost_lane2 = 1 - exp(-4/(lane_car_s - car_s));
 								cost_lane2 += 1;
 								//lane_no = 2;
@@ -315,7 +315,7 @@ int main() {
 					if(lane_no == 0){
 						//right lane change possible
 						if(d < (2+4*(lane_no + 1)+2) && d > (2+4*(lane_no + 1)-2)){
-							if((lane_car_s > car_s) && ((lane_car_s - car_s)>30)){
+							if(((lane_car_s > car_s) && ((lane_car_s - car_s)<30)) || ((lane_car_s < car_s) && (( car_s - lane_car_s)<15))){
 								//cost_lane1 = 1 - exp(-4/(lane_car_s - car_s));
 								cost_lane1 += 1;
 								//lane_no = 1;
@@ -325,7 +325,7 @@ int main() {
 					if(lane_no == 2){
 						//left lane change possible
 						if(d < (2+4*(lane_no - 1)+2) && d > (2+4*(lane_no - 1)-2)){
-							if((lane_car_s > car_s) && ((lane_car_s - car_s)>30)){
+							if(((lane_car_s > car_s) && ((lane_car_s - car_s)<30)) || ((lane_car_s < car_s) && (( car_s - lane_car_s)<15))){
 								//cost_lane1 = 1 - exp(-4/(lane_car_s - car_s));
 								cost_lane1 += 1;
 								//lane_no = 1;
