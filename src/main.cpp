@@ -242,7 +242,7 @@ int main() {
           	auto sensor_fusion = j[1]["sensor_fusion"];
 			
 			int prev_size = previous_path_x.size();
-			cout<<"Prev Size"<<prev_size<<endl;
+			//cout<<"Prev Size"<<prev_size<<endl;
 			// To Avoid collision in same lane
 			if(prev_size > 0){
 				car_s = end_path_s;
@@ -253,7 +253,7 @@ int main() {
 			for(int i =0;i<sensor_fusion.size();i++){
 				float d = sensor_fusion[i][6];
 				// Checking car is in same lane
-				if(d < (2+4*lane_no+2) && d > (2-4*lane_no+2)){
+				if(d < (2+4*lane_no+2) && d > (2+4*lane_no-2)){
 					double vx = sensor_fusion[i][3];
 					double vy = sensor_fusion[i][4];
 					double check_speed = sqrt(vx*vx+vy*vy);
@@ -265,6 +265,8 @@ int main() {
 					if((check_car_s > car_s) && ((check_car_s - car_s)<30)){
 						//ref_vel = 20.5;
 						too_close = true;
+						//if(lane_no == 1)
+							//lane_no = 0;
 					}
 				}
 			}
@@ -275,7 +277,91 @@ int main() {
 				ref_vel += 0.224;
 			}
 			// --- end of collision avoidance code
-			
+			// Initializing lane costs
+			double cost_lane0 = 0.0;
+			double cost_lane1 = 0.0;
+			double cost_lane2 = 0.0;
+			// Change lane code
+			if(too_close){
+				for(int i =0;i<sensor_fusion.size();i++){
+					float d = sensor_fusion[i][6];
+					// Checking car is in left lane
+					double vx = sensor_fusion[i][3];
+					double vy = sensor_fusion[i][4];
+					double lane_car_speed = sqrt(vx*vx+vy*vy);
+					double lane_car_s = sensor_fusion[i][5];
+					
+					
+					
+					// Front vehicle position prediction
+					lane_car_s += ((double)prev_size*0.02*lane_car_speed);
+					if(lane_no == 1){
+						// left and right lane change possible
+						if(d < (2+4*(lane_no - 1)+2) && d > (2+4*(lane_no - 1)-2)){
+							if((lane_car_s > car_s) && ((lane_car_s - car_s)>30)){
+								//cost_lane0 = 1 - exp(-4/(lane_car_s - car_s));
+								cost_lane0 += 1;
+								//lane_no = 0;
+							}
+						}
+						if(d < (2+4*(lane_no + 1)+2) && d > (2+4*(lane_no + 1)-2)){
+							if((lane_car_s > car_s) && ((lane_car_s - car_s)>30)){
+								//cost_lane2 = 1 - exp(-4/(lane_car_s - car_s));
+								cost_lane2 += 1;
+								//lane_no = 2;
+							}
+						}
+					}
+					if(lane_no == 0){
+						//right lane change possible
+						if(d < (2+4*(lane_no + 1)+2) && d > (2+4*(lane_no + 1)-2)){
+							if((lane_car_s > car_s) && ((lane_car_s - car_s)>30)){
+								//cost_lane1 = 1 - exp(-4/(lane_car_s - car_s));
+								cost_lane1 += 1;
+								//lane_no = 1;
+							}
+						}
+					}
+					if(lane_no == 2){
+						//left lane change possible
+						if(d < (2+4*(lane_no - 1)+2) && d > (2+4*(lane_no - 1)-2)){
+							if((lane_car_s > car_s) && ((lane_car_s - car_s)>30)){
+								//cost_lane1 = 1 - exp(-4/(lane_car_s - car_s));
+								cost_lane1 += 1;
+								//lane_no = 1;
+							}
+						}
+					}
+				}
+				//() ||((cost_lane0 < cost_lane1))
+				if(lane_no == 1){
+					if(cost_lane2 == 0){
+						lane_no = 2;
+						cout <<"Changing lane to 2"<<endl;
+					}
+					if(cost_lane0 == 0){
+						lane_no = 0;
+						cout <<"Changing lane to 0"<<endl;
+					}
+				}
+				else if(lane_no == 0){
+					if(cost_lane1 == 0){
+						lane_no = 1;
+						cout <<"Changing lane to 1"<<endl;
+					}
+				}
+				else if(lane_no == 2){
+					if(cost_lane1 == 0){
+						lane_no = 1;
+						cout <<"Changing lane to 1"<<endl;
+					}
+				}
+				cout<<"Lane :"<<lane_no<<endl;
+				cout<<"Cost Lane0 :"<<cost_lane0<<endl;
+				cout<<"Cost Lane1 :"<<cost_lane1<<endl;
+				cout<<"Cost Lane2 :"<<cost_lane2<<endl;
+			}
+			// -- Change lane code
 			cout<<"Ref Vel:"<<ref_vel<<endl;
           	json msgJson;
 
@@ -337,7 +423,7 @@ int main() {
 				double d_y = ptsy[i] - ref_y;
 				
 				ptsx[i] = (d_x*cos(0-ref_yaw) - d_y*sin(0-ref_yaw));
-				ptsy[i] = (d_x*sin(0-ref_yaw) - d_y*cos(0-ref_yaw));
+				ptsy[i] = (d_x*sin(0-ref_yaw) + d_y*cos(0-ref_yaw));
 			}
 			// Create a spline
 			tk::spline s;
@@ -357,7 +443,7 @@ int main() {
 			double x_add_on = 0;
 			// Filling up the planner with points so that path planner will have 50 points
 			for(int i =1;i<= 50-previous_path_x.size();i++){
-				double N = (target_dist / (0.2 * ref_vel / 2.24));
+				double N = (target_dist / (0.02 * ref_vel / 2.24));
 				double x_point = x_add_on + target_x/N;
 				double y_point = s(x_point);
 				
@@ -366,11 +452,11 @@ int main() {
 				double x_ref1 = x_point;
 				double y_ref1 = y_point;
 				// getting back to global coords
-				x_point = (x_ref1*cos(ref_yaw) - y_ref1*sin(ref_yaw));
-				y_point = (x_ref1*sin(ref_yaw) + y_ref1*cos(ref_yaw));
+				x_point = (x_ref1 * cos(ref_yaw) - y_ref1 * sin(ref_yaw));
+				y_point = (x_ref1 * sin(ref_yaw) + y_ref1 * cos(ref_yaw));
 				
-				x_point += ref_x;//ref_x
-				y_point += ref_y;//ref_y
+				x_point += ref_x;
+				y_point += ref_y;
 				
 				next_x_vals.push_back(x_point);
 				next_y_vals.push_back(y_point);
